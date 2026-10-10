@@ -39,4 +39,4 @@ If Ollama isn't running, the app uses a built-in fallback explanation
 seaborn sample datasets (tips, penguins, planets, exercise) and the movies dataset from the vega-datasets repository.
 
 ## License
-MIT. See the [LICENCE](LICENSE) file.
+MIT. See the [MIT license](MIT license) file.
