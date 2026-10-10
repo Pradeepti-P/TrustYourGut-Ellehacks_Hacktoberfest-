@@ -4,7 +4,7 @@ https://trustyourgut.streamlit.app/
 Does your gut beat the data? 
 A game where you guess whether a claim is true, then see what real data says and an open-weight AI explains the result!
 
-Demo Video: [add link]
+Demo Video: [A2509A94-E928-44B3-8A38-17FF0523A034.mp4]
 
 Hacktoberfect Hack Day at Ellehacks 2026 by:  Pradeepti Poudyal, Esha Gogna, Beenish Saeed, Arnaz Waniya
 
