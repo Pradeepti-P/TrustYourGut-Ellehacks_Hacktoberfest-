@@ -704,7 +704,7 @@ def landing():
         """,
         unsafe_allow_html=True,
     )
-  
+
 
 # --------------------------------------------------
 # CATEGORY MENU
@@ -829,6 +829,8 @@ def menu():
             )
 
     st.write("")
+
+
 # --------------------------------------------------
 # PREDICTION SCREEN
 # --------------------------------------------------
@@ -1194,7 +1196,9 @@ else:
         )
 
         with left:
-            st.caption(f"🎮 {ss.category.upper()}")
+            # Show the topic's own emoji (🍔 🔬 🎬 🏀), or 🎲 for the random mix.
+            icon = CATEGORIES.get(ss.category, "🎲")
+            st.caption(f"{icon} {ss.category.upper()}")
 
             st.progress(
                 (idx + 1) / len(queue),
