@@ -1,4 +1,5 @@
 # TrustYourGut
+https://trustyourgut.streamlit.app/
 
 Does your gut beat the data? 
 A game where you guess whether a claim is true, then see what real data says and an open-weight AI explains the result!
