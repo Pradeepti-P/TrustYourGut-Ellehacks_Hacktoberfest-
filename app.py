@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 
 import numpy as np
 import plotly.express as px
@@ -15,36 +16,42 @@ from claims import CATEGORIES, CLAIMS
 
 st.set_page_config(
     page_title="TrustYourGut",
-    page_icon="🧠",
+    page_icon="trust.png",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 st.markdown(
     """
     <style>
-    /* Overall background */
     .stApp {
         background:
-            radial-gradient(
-                ellipse at top left,
-                #8F250C 0%,
-                transparent 42%
-            ),
-            linear-gradient(
-                145deg,
-                #691E06 0%,
-                #691E06 55%,
-                #691E06 100%
-            );
+            radial-gradient(ellipse at top left, #8F250C 0%, transparent 42%),
+            linear-gradient(145deg, #691E06 0%, #691E06 55%, #691E06 100%);
         color: #FBBA72;
     }
 
-    /* Streamlit's header no longer sticks to the top while scrolling,
-       and the page starts below it so the nav buttons are never covered. */
     header[data-testid="stHeader"] {
-        position: absolute;
-        background: transparent;
+        background: transparent !important;
+    }
+
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    [data-testid="stSidebar"] {
+        background: #4a1504 !important;
+        border-right: 1px solid #3c4264;
+    }
+
+    [data-testid="stSidebar"] button {
+        visibility: visible !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        color: #FBBA72;
     }
 
     .block-container {
@@ -53,7 +60,6 @@ st.markdown(
         padding-bottom: 3rem;
     }
 
-    /* Headings */
     h1, h2, h3 {
         color: #ffffff !important;
         font-weight: 750 !important;
@@ -63,12 +69,10 @@ st.markdown(
         letter-spacing: -1.2px;
     }
 
-    /* Supporting text */
     .stMarkdown p {
         color: #FBBA72;
     }
 
-    /* Buttons */
     .stButton > button {
         width: 100%;
         min-height: 45px;
@@ -85,8 +89,9 @@ st.markdown(
         background: #BB4D00;
         color: #ffffff;
         transform: translateY(-2px);
-        box-shadow: 0 0 0 2px rgba(251, 186, 114, 0.55),
-                    0 6px 16px rgba(0, 0, 0, 0.35);
+        box-shadow:
+            0 0 0 2px rgba(251, 186, 114, 0.55),
+            0 6px 16px rgba(0, 0, 0, 0.35);
     }
 
     .stButton > button:active:not(:disabled) {
@@ -94,68 +99,13 @@ st.markdown(
         box-shadow: 0 0 0 2px rgba(251, 186, 114, 0.8);
     }
 
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(100deg, #BB4D00, #CA5310);
+        border: none;
+        color: white;
+    }
+
     .stButton > button[kind="primary"]:hover:not(:disabled) {
-        background: linear-gradient(100deg, #E0640F, #F07A25);
-        color: #ffffff;
-    }
-
-    /* Highlight radio options on hover too */
-    div[role="radiogroup"] label:hover {
-        border-color: #FBBA72;
-        background: #8F250C;
-        cursor: pointer;
-    }
-
-    /* Arena grid: two per row, wraps to one per row on narrow screens */
-    .st-key-arena_grid div[data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .st-key-arena_grid div[data-testid="stColumn"],
-    .st-key-arena_grid div[data-testid="column"] {
-        flex: 1 1 280px;
-        min-width: min(280px, 100%);
-    }
-
-    /* Sidebar theme */
-    section[data-testid="stSidebar"] {
-        background: #4a1504;
-        border-right: 1px solid #3c4264;
-    }
-
-    /* Arena cards: the whole card highlights on hover, and clicking
-       anywhere on the card presses its button. */
-    [class*="st-key-card_"] {
-        position: relative;
-        transition: all 0.2s ease;
-    }
-
-    [class*="st-key-card_"]:hover {
-        border-color: #FBBA72 !important;
-        background: rgba(187, 77, 0, 0.38) !important;
-        transform: translateY(-3px);
-        box-shadow: 0 0 0 2px rgba(251, 186, 114, 0.6),
-                    0 10px 24px rgba(0, 0, 0, 0.4);
-        cursor: pointer;
-    }
-
-    /* Stretch the button's click area over the whole card */
-    [class*="st-key-card_"] .stButton,
-    [class*="st-key-card_"] .stButton > button {
-        position: static !important;
-        transform: none !important;
-    }
-
-    [class*="st-key-card_"] .stButton > button::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 18px;
-        cursor: pointer;
-    }
-
-    [class*="st-key-card_"]:hover .stButton > button {
         background: linear-gradient(100deg, #E0640F, #F07A25);
         color: #ffffff;
     }
@@ -165,13 +115,42 @@ st.markdown(
         transform: none;
     }
 
-    .stButton > button[kind="primary"] {
-        background: linear-gradient(100deg, #BB4D00, #CA5310);
-        border: none;
-        color: white;
+    .st-key-category_grid div[data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap;
+        gap: 1rem;
     }
 
-    /* Containers */
+    .st-key-category_grid div[data-testid="stColumn"],
+    .st-key-category_grid div[data-testid="column"] {
+        flex: 1 1 280px;
+        min-width: min(280px, 100%);
+    }
+
+    [class*="st-key-category_"] button {
+        width: 100% !important;
+        min-height: 145px !important;
+        height: 145px !important;
+        white-space: pre-wrap !important;
+        text-align: center !important;
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+        color: #FBBA72 !important;
+        background: rgba(25, 32, 54, 0.76) !important;
+        border: 1px solid #303954 !important;
+        border-radius: 18px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    [class*="st-key-category_"] button:hover:not(:disabled) {
+        background: rgba(187, 77, 0, 0.38) !important;
+        border: 1px solid #FBBA72 !important;
+        color: #ffffff !important;
+        transform: translateY(-3px) !important;
+        box-shadow:
+            0 0 0 2px rgba(251, 186, 114, 0.4),
+            0 10px 24px rgba(0, 0, 0, 0.3) !important;
+    }
+
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background: rgba(25, 32, 54, 0.76);
         border: 1px solid #303954;
@@ -179,7 +158,6 @@ st.markdown(
         padding: 12px;
     }
 
-    /* Metrics */
     div[data-testid="stMetric"] {
         background: rgba(30, 38, 63, 0.9);
         border: 1px solid #343e60;
@@ -196,7 +174,6 @@ st.markdown(
         font-weight: 800;
     }
 
-    /* Radio buttons */
     div[role="radiogroup"] {
         gap: 10px;
     }
@@ -208,22 +185,24 @@ st.markdown(
         padding: 8px 12px;
     }
 
-    /* Progress bar */
+    div[role="radiogroup"] label:hover {
+        border-color: #FBBA72;
+        background: #8F250C;
+        cursor: pointer;
+    }
+
     div[data-testid="stProgressBar"] > div > div {
         background: linear-gradient(90deg, #8b5cf6, #CA5310);
     }
 
-    /* Alerts */
     div[data-testid="stAlert"] {
         border-radius: 14px;
     }
 
-    /* Separators */
     hr {
         border-color: #303954;
     }
 
-    /* Mobile layout */
     @media (max-width: 640px) {
         .block-container {
             padding: 4rem 1rem 2rem;
@@ -231,6 +210,11 @@ st.markdown(
 
         h1 {
             font-size: 2rem !important;
+        }
+
+        [class*="st-key-category_"] button {
+            min-height: 125px !important;
+            height: 125px !important;
         }
     }
     </style>
@@ -250,8 +234,6 @@ BETS = {
 }
 
 MIXED_ROUNDS = 6
-
-# Keys that make up a game in progress.
 GAME_KEYS = ["category", "queue", "idx", "answers"]
 
 
@@ -266,17 +248,12 @@ def get_df(claim_id):
 
 
 # --------------------------------------------------
-# STATE + NAVIGATION (all of these are button callbacks)
-#
-#   view     "home" or "game"
-#   queue    the claims for this game, in round order
-#   idx      the round on screen (== len(queue) means the final screen)
-#   answers  {round index: result}, so you can go Back and review any round
-#   gid      bumps on every new game so old radio selections never leak in
+# STATE + NAVIGATION
 # --------------------------------------------------
 
 ss = st.session_state
-ss.setdefault("view", "home")
+
+ss.setdefault("view", "landing")
 ss.setdefault("gid", 0)
 
 
@@ -298,7 +275,13 @@ def start_game(category):
         ss.notice = "There are no claims available in this category yet."
         return
 
-    ss.update(category=category, queue=pool, idx=0, answers={}, view="game")
+    ss.update(
+        category=category,
+        queue=pool,
+        idx=0,
+        answers={},
+        view="game",
+    )
     ss.gid += 1
 
 
@@ -307,12 +290,17 @@ def go_home():
     ss.view = "home"
 
 
+def go_landing():
+    """Return to the logo landing page without deleting an active game."""
+    ss.view = "landing"
+
+
 def resume_game():
     ss.view = "game"
 
 
 def quit_game():
-    """Throw the current game away and return to the arena picker."""
+    """Throw away the current game and return to the category picker."""
     for key in GAME_KEYS:
         ss.pop(key, None)
     ss.view = "home"
@@ -329,28 +317,39 @@ def step(delta):
 
 
 # --------------------------------------------------
-# NAVIGATION BARS
+# SIDEBAR NAVIGATION
 # --------------------------------------------------
 
 def sidebar():
-    """Streamlit's own collapsible sidebar. On desktop it pushes the page over when
-    open instead of covering it, and the page keeps top padding so the open/close
-    arrow never sits on top of your content."""
-    st.sidebar.title("🧠 TrustYourGut")
-    st.sidebar.button("🏠 Home", key="sb_home", on_click=go_home)
+    st.sidebar.title("TrustYourGut")
+
+    st.sidebar.button(
+        "Start page",
+        key="sb_landing",
+        on_click=go_landing,
+    )
+
+    st.sidebar.button(
+        "Categories",
+        key="sb_home",
+        on_click=go_home,
+    )
 
     st.sidebar.divider()
+
     st.sidebar.caption(
-        "Switch arena"
+        "Choose a category"
         + (" (replaces current game)" if has_game() else "")
     )
+
     for name, icon in CATEGORIES.items():
         st.sidebar.button(
             f"{icon} {name}",
-            key=f"sb_arena_{name}",
+            key=f"sb_category_{name}",
             on_click=start_game,
             args=(name,),
         )
+
     st.sidebar.button(
         "🎲 Random mix",
         key="sb_random",
@@ -367,9 +366,12 @@ def sidebar():
     st.sidebar.caption("Jump to a round")
 
     for i in range(len(ss.queue)):
-        a = ss.answers.get(i)
-        mark = "⬜" if a is None else ("✅" if a["correct"] else "❌")
-        here = "▶ " if i == ss.idx and ss.view == "game" else ""
+        answer = ss.answers.get(i)
+        mark = "⬜" if answer is None else (
+            "✅" if answer["correct"] else "❌"
+        )
+        here = "▶ " if ss.idx == i and ss.view == "game" else ""
+
         st.sidebar.button(
             f"{here}{mark} Round {i + 1}",
             key=f"sb_round_{i}",
@@ -385,14 +387,17 @@ def sidebar():
     )
 
     st.sidebar.divider()
-    st.sidebar.button("🚪 Quit game", key="sb_quit", on_click=quit_game)
+
+    st.sidebar.button(
+        "🚪 Quit game",
+        key="sb_quit",
+        on_click=quit_game,
+    )
 
 
 def nav_bar():
-    """Home / Previous / Next, shown above every round."""
+    """Categories / Previous / Next, shown above every round."""
     i, n = ss.idx, len(ss.queue)
-    answered = i in ss.answers
-
     c1, c2, c3 = st.columns(3)
 
     with c1:
@@ -409,10 +414,16 @@ def nav_bar():
 
     with c3:
         if i == n - 1:
-            label = "🏆 Final score" if answered else "Skip to final →"
+            label = "🏆 Final score" if i in ss.answers else "Skip to final →"
         else:
-            label = "Next →" if answered else "Skip →"
-        st.button("{}".format(label), key="nav_next", on_click=step, args=(1,))
+            label = "Next →" if i in ss.answers else "Skip →"
+
+        st.button(
+            label,
+            key="nav_next",
+            on_click=step,
+            args=(1,),
+        )
 
 
 # --------------------------------------------------
@@ -445,8 +456,6 @@ def make_chart(c, df):
         )
 
     else:
-        # Sample large datasets for chart performance.
-        # Statistical analysis still uses the full dataset.
         if len(df) > 3000:
             df = df.sample(3000, random_state=0)
 
@@ -474,7 +483,6 @@ def make_chart(c, df):
                 ],
             )
 
-            # Overall trend line when data is grouped.
             if c.get("split_by"):
                 slope, intercept = np.polyfit(
                     df[c["x"]],
@@ -499,9 +507,7 @@ def make_chart(c, df):
                 )
 
         else:
-            sub = df[
-                df[c["group"]].isin([c["a"], c["b"]])
-            ]
+            sub = df[df[c["group"]].isin([c["a"], c["b"]])]
 
             fig = px.box(
                 sub,
@@ -516,7 +522,6 @@ def make_chart(c, df):
                 ],
             )
 
-    # Consistent chart styling
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -543,54 +548,221 @@ def make_chart(c, df):
 
 
 # --------------------------------------------------
-# HOME SCREEN
+# LANDING SCREEN
 # --------------------------------------------------
 
-def menu():
+def landing():
+    """Full-page landing screen focused on the TrustYourGut logo."""
+
+    logo_path = Path(__file__).resolve().parent / "trust.png"
+
+    # Use the full available page width and create a centered hero section.
     st.markdown(
         """
-        <div style="text-align:center; padding:1.5rem 0 1rem;">
-            <div style="font-size:3.5rem;">🧠</div>
-            <h1 style="
-                font-size:3.4rem;
-                margin-bottom:0;
-                letter-spacing:-1.5px;
-            ">
-                Trust<span style="color:#FBBA72;">YourGut</span>
-            </h1>
-            <p style="
-                font-size:1.15rem;
-                color:#FBBA72;
-                margin-top:0.7rem;
-            ">
-                Your intuition has a theory. The data has receipts.
-            </p>
-            <p style="
-                color:#8b96b5;
-                font-size:0.85rem;
-                letter-spacing:2px;
-            ">
-                PREDICT &nbsp; · &nbsp; BET &nbsp; · &nbsp; REVEAL
-            </p>
+        <style>
+        .block-container {
+            max-width: 100% !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            padding-left: 3rem !important;
+            padding-right: 3rem !important;
+        }
+
+        [data-testid="stAppViewContainer"] {
+            background:
+                radial-gradient(
+                    ellipse at 50% 35%,
+                    rgba(187, 77, 0, 0.3) 0%,
+                    transparent 55%
+                ),
+                linear-gradient(
+                    145deg,
+                    #691E06 0%,
+                    #4a1504 100%
+                );
+        }
+
+        .landing-spacer {
+            height: 8vh;
+        }
+
+        .landing-tagline {
+            text-align: center;
+            color: #FBBA72;
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            margin-top: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .landing-subtitle {
+            text-align: center;
+            color: #ffffff;
+            opacity: 0.85;
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            margin-top: 0.8rem;
+        }
+
+        div.st-key-landing_start button {
+            min-height: 60px !important;
+            font-size: 1.25rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 2px !important;
+            border-radius: 16px !important;
+            background: linear-gradient(
+                100deg,
+                #BB4D00,
+                #E0640F
+            ) !important;
+            border: 1px solid #FBBA72 !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        @media (max-width: 640px) {
+            .block-container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            .landing-spacer {
+                height: 4vh;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="landing-spacer"></div>', unsafe_allow_html=True)
+
+    # Center the logo while giving it significantly more space.
+    left, center, right = st.columns([1, 3, 1])
+
+    with center:
+        if logo_path.is_file():
+            st.image(
+                str(logo_path),
+                use_container_width=True,
+            )
+        else:
+            st.markdown(
+                """
+                <div style="
+                    text-align:center;
+                    padding:3rem 0;
+                ">
+                    <div style="font-size:5rem;">🧠</div>
+                    <div style="
+                        font-size:clamp(3rem, 7vw, 6rem);
+                        font-weight:900;
+                        letter-spacing:-2px;
+                        color:#ffffff;
+                    ">
+                        Trust<span style="color:#FBBA72;">YourGut</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown(
+        """
+        <div class="landing-tagline">
+            YOUR INSTINCTS. THE DATA. ONE FINAL VERDICT.
+        </div>
+        <div class="landing-subtitle">
+            Think you can tell fact from fiction?
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    st.write("")
+    st.write("")
+
+    _, button_col, _ = st.columns([2, 1, 2])
+
+    with button_col:
+        st.button(
+            "PLAY NOW!",
+            key="landing_start",
+            type="primary",
+            on_click=go_home,
+            use_container_width=True,
+        )
+
+    st.markdown(
+        """
+        <div style="
+            text-align:center;
+            color:#FBBA72;
+            opacity:0.7;
+            font-size:0.85rem;
+            margin-top:3rem;
+        ">
+            TRUST YOUR GUT. THEN CHECK THE DATA.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+  
+
+# --------------------------------------------------
+# CATEGORY MENU
+# --------------------------------------------------
+
+def menu():
+    # Three numbered steps displayed side by side using Streamlit
+    col1, col2, col3 = st.columns(3, gap="medium")
+
+    with col1:
+        with st.container(border=True):
+            st.markdown(
+                "<h2 style='color:#FBBA72;'>1</h2>",
+                unsafe_allow_html=True,
+            )
+            st.markdown("### Trust Your Gut")
+            st.write("Vote Yes or No and place your confidence bet.")
+
+    with col2:
+        with st.container(border=True):
+            st.markdown(
+                "<h2 style='color:#FBBA72;'>2</h2>",
+                unsafe_allow_html=True,
+            )
+            st.markdown("### Beat the Data")
+            st.write("Reveal the statistics and earn points.")
+
+    with col3:
+        with st.container(border=True):
+            st.markdown(
+                "<h2 style='color:#FBBA72;'>3</h2>",
+                unsafe_allow_html=True,
+            )
+            st.markdown("### See Your Score")
+            st.write("Check your results and see how well you did.")
+
+    st.write("")
+
     if "notice" in ss:
         st.warning(ss.pop("notice"))
 
-    # Resume card, only when a game is already in progress.
+    # Resume card, only when a game is already in progress
     if has_game():
         n = len(ss.queue)
         done = len(ss.answers)
+
         with st.container(border=True):
-            left, right = st.columns([3, 1], vertical_alignment="center")
+            left, right = st.columns(
+                [3, 1],
+                vertical_alignment="center",
+            )
+
             with left:
                 st.markdown(f"### ▶ Game in progress: {ss.category}")
                 st.caption(
                     f"{done} of {n} rounds answered · {points()} points"
                 )
+
             with right:
                 st.button(
                     "Resume →",
@@ -598,18 +770,24 @@ def menu():
                     type="primary",
                     on_click=resume_game,
                 )
+
         st.write("")
 
-    st.subheader("🎯 Choose your arena")
+    # Category selection, without "Choose Your Category"
+    st.subheader("Pick a topic")
+
     st.caption(
-        "Pick a topic, trust your instincts, and see what the evidence says."
-        + (" Starting a new arena replaces your current game." if has_game() else "")
+        "Choose a topic and see how your guesses stack up against the data."
+        + (
+            " Starting a new topic will replace your current game."
+            if has_game()
+            else ""
+        )
     )
 
-    # Two categories per row. The CSS wraps them to one per row on small screens.
     category_items = list(CATEGORIES.items())
 
-    with st.container(key="arena_grid"):
+    with st.container(key="category_grid"):
         for start in range(0, len(category_items), 2):
             cols = st.columns(2)
 
@@ -618,32 +796,17 @@ def menu():
                 category_items[start:start + 2],
             ):
                 with col:
-                    with st.container(border=True, key=f"card_{name}"):
-                        st.markdown(
-                            f"""
-                            <div style="text-align:center; padding:0.6rem 0;">
-                                <div style="font-size:2.2rem;">{icon}</div>
-                                <div style="
-                                    font-size:1.1rem;
-                                    font-weight:700;
-                                    color:#FBBA72;
-                                    margin-top:0.4rem;
-                                ">{name}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-
-                        st.button(
-                            "Play arena →",
-                            key=f"arena_{name}",
-                            type="primary",
-                            on_click=start_game,
-                            args=(name,),
-                        )
+                    st.button(
+                        f"{icon}\n\n{name}",
+                        key=f"category_{name}",
+                        on_click=start_game,
+                        args=(name,),
+                        use_container_width=True,
+                    )
 
     st.write("")
 
+    # Random mix card
     with st.container(border=True, key="card_random"):
         left, right = st.columns(
             [3, 1],
@@ -651,10 +814,10 @@ def menu():
         )
 
         with left:
-            st.markdown("### 🎲 Feeling unpredictable?")
+            st.markdown("### 🎲 Mix it up")
             st.caption(
-                "Mix topics, make six calls, and find out how well "
-                "you really know the data."
+                "Get six claims from different topics and see how many "
+                "you can call correctly."
             )
 
         with right:
@@ -666,12 +829,6 @@ def menu():
             )
 
     st.write("")
-    st.caption(
-        "Backed by real data. Explained with AI. "
-        "Your score depends on your gut."
-    )
-
-
 # --------------------------------------------------
 # PREDICTION SCREEN
 # --------------------------------------------------
@@ -681,11 +838,11 @@ def vote(c):
     suffix = f"{ss.gid}_{i}"
 
     with st.container(border=True):
-        st.caption("🔮 YOUR PREDICTION")
-        st.markdown("### What does your gut say?")
+        st.caption("YOUR TURN")
+        st.markdown("### Trust your gut")
 
         guess = st.radio(
-            "Do you think this claim is supported by the data?",
+            "Do you think this claim is true or false?",
             ["True", "False"],
             index=None,
             horizontal=True,
@@ -693,10 +850,10 @@ def vote(c):
         )
 
         st.divider()
-        st.markdown("#### 🎲 Choose your confidence")
+        st.markdown("#### How sure are you?")
 
         bet = st.radio(
-            "How much are you willing to risk?",
+            "Choose how many points to put on your guess.",
             list(BETS.keys()),
             horizontal=True,
             key=f"bet_{suffix}",
@@ -713,11 +870,11 @@ def vote(c):
                 padding:12px 16px;
                 margin:0.7rem 0 1rem;
             ">
-                <span style="color:#FBBA72; font-weight:700;">
+                <span style="color:#FBBA72;font-weight:700;">
                     Your wager: {wager} point{"s" if wager != 1 else ""}
                 </span>
                 <br>
-                <span style="color:#b9c2d8; font-size:0.9rem;">
+                <span style="color:#b9c2d8;font-size:0.9rem;">
                     Correct: +{wager} points &nbsp; · &nbsp;
                     Incorrect: -{wager} points
                 </span>
@@ -727,7 +884,7 @@ def vote(c):
         )
 
         if st.button(
-            "Lock in my prediction →",
+            "Lock in my guess →",
             type="primary",
             disabled=guess is None,
             key=f"lock_{suffix}",
@@ -738,13 +895,9 @@ def vote(c):
             correct = (guess == "True") == res["supported"]
             pts = wager if correct else -wager
 
-            with st.spinner(
-                "🔎 Checking the evidence and asking the AI..."
-            ):
+            with st.spinner("Checking the data..."):
                 text, used_model = explain(c, res)
 
-            # Stored per round, so Back/Forward can show it again without
-            # recomputing or re-asking the model.
             ss.answers[i] = {
                 "claim": c["claim"],
                 "guess": guess,
@@ -768,25 +921,16 @@ def reveal(c):
     res = rv["res"]
 
     if rv["correct"]:
-        st.success(f"🎯 You called it! +{rv['pts']} points")
+        st.success(f"You called it! +{rv['pts']} points")
     else:
-        st.error(
-            f"🫣 The data disagrees. {rv['pts']} points"
-        )
+        st.error(f"The data disagrees! {rv['pts']} points")
 
-    st.caption(f"You said **{rv['guess']}** with a {rv['wager']}-point wager.")
-
-    verdict = (
-        "SUPPORTED"
-        if res["supported"]
-        else "NOT SUPPORTED"
+    st.caption(
+        f"You said **{rv['guess']}** with a {rv['wager']}-point wager."
     )
 
-    verdict_color = (
-        "#FBBA72"
-        if res["supported"]
-        else "#CA5310"
-    )
+    verdict = "SUPPORTED" if res["supported"] else "NOT SUPPORTED"
+    verdict_color = "#FBBA72" if res["supported"] else "#CA5310"
 
     st.markdown(
         f"""
@@ -821,7 +965,7 @@ def reveal(c):
         unsafe_allow_html=True,
     )
 
-    st.markdown("### 📈 The numbers behind the claim")
+    st.markdown("### What the numbers show")
 
     st.metric(
         res["headline_label"],
@@ -830,23 +974,19 @@ def reveal(c):
         delta_color="off",
     )
 
-    st.markdown("### 📊 Show me the evidence")
+    st.markdown("### The data")
 
     fig = make_chart(c, get_df(c["id"]))
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-    )
-
-    st.markdown("### 🤖 The AI breakdown")
+    st.markdown("### What it means")
 
     with st.container(border=True):
         st.markdown(rv["text"])
 
     if rv["used_model"]:
         st.caption(
-            f"✨ Explained by {MODEL} "
+            f"Explained by {MODEL} "
             "(open-weight model running locally)"
         )
     else:
@@ -860,7 +1000,7 @@ def reveal(c):
     last = ss.idx == len(ss.queue) - 1
 
     st.button(
-        "🏆 See final score" if last else "Next round →",
+        "See final score" if last else "Next round →",
         type="primary",
         key=f"next_{ss.gid}_{ss.idx}",
         on_click=step,
@@ -876,10 +1016,11 @@ def end():
     answers = ss.answers
     n = len(ss.queue)
 
-    # Navigation row
     c1, c2, c3 = st.columns(3)
+
     with c1:
         st.button("🏠 Home", key="end_home", on_click=go_home)
+
     with c2:
         st.button(
             "← Back to last round",
@@ -887,8 +1028,13 @@ def end():
             on_click=goto,
             args=(n - 1,),
         )
+
     with c3:
-        st.button("🚪 Quit game", key="end_quit", on_click=quit_game)
+        st.button(
+            "🚪 Quit game",
+            key="end_quit",
+            on_click=quit_game,
+        )
 
     if not answers:
         st.title("Game over")
@@ -896,6 +1042,7 @@ def end():
             "You skipped every round. Go back and make a prediction "
             "to see your score."
         )
+
         st.button(
             "▶ Start from round 1",
             type="primary",
@@ -920,7 +1067,7 @@ def end():
 
     st.markdown(
         """
-        <div style="text-align:center; padding:1rem 0;">
+        <div style="text-align:center;padding:1rem 0;">
             <div style="font-size:3.2rem;">🏆</div>
         </div>
         """,
@@ -928,9 +1075,14 @@ def end():
     )
 
     st.title(title)
+
     st.caption(
         f"You completed the {ss.category} challenge."
-        + (f" ({skipped} round{'s' if skipped != 1 else ''} skipped.)" if skipped else "")
+        + (
+            f" ({skipped} round{'s' if skipped != 1 else ''} skipped.)"
+            if skipped
+            else ""
+        )
     )
 
     with st.container(border=True):
@@ -955,7 +1107,7 @@ def end():
     st.markdown("### 📝 Your round-by-round results")
 
     for i, claim in enumerate(ss.queue):
-        a = answers.get(i)
+        answer = answers.get(i)
 
         with st.container(border=True):
             left, mid, right_col = st.columns(
@@ -964,31 +1116,39 @@ def end():
             )
 
             with left:
-                icon = "⬜" if a is None else ("✅" if a["correct"] else "❌")
+                icon = (
+                    "⬜"
+                    if answer is None
+                    else ("✅" if answer["correct"] else "❌")
+                )
+
                 st.markdown(f"**{icon} Round {i + 1}**")
                 st.write(claim["claim"])
 
             with mid:
-                if a is None:
+                if answer is None:
                     st.caption("Skipped")
                 else:
-                    st.metric("Points", f"{a['pts']:+d}", delta_color="off")
+                    st.metric(
+                        "Points",
+                        f"{answer['pts']:+d}",
+                        delta_color="off",
+                    )
 
             with right_col:
                 st.button(
-                    "Answer" if a is None else "Review",
+                    "Answer" if answer is None else "Review",
                     key=f"review_{ss.gid}_{i}",
                     on_click=goto,
                     args=(i,),
                 )
 
     st.write("")
-
     col1, col2 = st.columns(2)
 
     with col1:
         st.button(
-            "🔄 Play this arena again",
+            "Play this category again",
             type="primary",
             key="end_again",
             on_click=start_game,
@@ -997,7 +1157,7 @@ def end():
 
     with col2:
         st.button(
-            "🎯 Pick another arena",
+            "Pick another category",
             key="end_pick",
             on_click=quit_game,
         )
@@ -1009,7 +1169,10 @@ def end():
 
 sidebar()
 
-if ss.view == "home" or not has_game():
+if ss.view == "landing":
+    landing()
+
+elif ss.view == "home" or not has_game():
     menu()
 
 else:
@@ -1025,16 +1188,13 @@ else:
         nav_bar()
         st.write("")
 
-        # Round progress and current score
         left, right = st.columns(
             [3, 1],
             vertical_alignment="center",
         )
 
         with left:
-            st.caption(
-                f"🎮 {ss.category.upper()}"
-            )
+            st.caption(f"🎮 {ss.category.upper()}")
 
             st.progress(
                 (idx + 1) / len(queue),
@@ -1042,10 +1202,7 @@ else:
             )
 
         with right:
-            st.metric(
-                "Your points",
-                points(),
-            )
+            st.metric("Your points", points())
 
         st.divider()
         st.subheader(claim["claim"])
