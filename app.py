@@ -29,16 +29,16 @@ st.markdown(
         background:
             radial-gradient(
                 ellipse at top left,
-                #252052 0%,
+                #8F250C 0%,
                 transparent 42%
             ),
             linear-gradient(
                 145deg,
-                #0b1020 0%,
-                #11172a 55%,
-                #101c2d 100%
+                #691E06 0%,
+                #691E06 55%,
+                #691E06 100%
             );
-        color: #f4f5ff;
+        color: #FBBA72;
     }
 
     .block-container {
@@ -59,7 +59,7 @@ st.markdown(
 
     /* Supporting text */
     .stMarkdown p {
-        color: #c1c9dd;
+        color: #FBBA72;
     }
 
     /* Buttons */
@@ -68,21 +68,21 @@ st.markdown(
         min-height: 45px;
         border: 1px solid #3c4264;
         border-radius: 12px;
-        background: #1b2239;
+        background: #8F250C;
         color: #f6f5ff;
         font-weight: 650;
         transition: all 0.2s ease;
     }
 
     .stButton > button:hover {
-        border-color: #a78bfa;
-        background: #30284f;
+        border-color: #FBBA72;
+        background: #BB4D00;
         color: #ffffff;
         transform: translateY(-2px);
     }
 
     .stButton > button[kind="primary"] {
-        background: linear-gradient(100deg, #7c3aed, #6366f1);
+        background: linear-gradient(100deg, #BB4D00, #CA5310);
         border: none;
         color: white;
     }
@@ -108,7 +108,7 @@ st.markdown(
     }
 
     div[data-testid="stMetricValue"] {
-        color: #c4b5fd;
+        color: #FBBA72;
         font-weight: 800;
     }
 
@@ -126,7 +126,7 @@ st.markdown(
 
     /* Progress bar */
     div[data-testid="stProgressBar"] > div > div {
-        background: linear-gradient(90deg, #8b5cf6, #2dd4bf);
+        background: linear-gradient(90deg, #8b5cf6, #CA5310);
     }
 
     /* Alerts */
@@ -249,9 +249,9 @@ def make_chart(c, df):
             },
             color="result",
             color_discrete_sequence=[
-                "#8b5cf6",
-                "#2dd4bf",
-                "#f59e0b",
+                "#FBBA72",
+                "#CA5310",
+                "#8F250C",
             ],
         )
 
@@ -278,10 +278,10 @@ def make_chart(c, df):
                 log_y=c.get("log_y", False),
                 labels=labels,
                 color_discrete_sequence=[
-                    "#a78bfa",
-                    "#2dd4bf",
+                    "#FBBA72",
+                    "#CA5310",
                     "#f59e0b",
-                    "#fb7185",
+                    "#BB4D00",
                 ],
             )
 
@@ -323,7 +323,7 @@ def make_chart(c, df):
                 color=c["group"],
                 color_discrete_sequence=[
                     "#8b5cf6",
-                    "#2dd4bf",
+                    "#CA5310",
                 ],
             )
 
@@ -367,11 +367,11 @@ def menu():
                 margin-bottom:0;
                 letter-spacing:-1.5px;
             ">
-                Trust<span style="color:#a78bfa;">YourGut</span>
+                Trust<span style="color:#FBBA72;">YourGut</span>
             </h1>
             <p style="
                 font-size:1.15rem;
-                color:#c1c9dd;
+                color:#FBBA72;
                 margin-top:0.7rem;
             ">
                 Your intuition has a theory. The data has receipts.
@@ -413,7 +413,7 @@ def menu():
                             <div style="
                                 font-size:1.1rem;
                                 font-weight:700;
-                                color:#f4f5ff;
+                                color:#FBBA72;
                                 margin-top:0.4rem;
                             ">{name}</div>
                         </div>
@@ -497,7 +497,7 @@ def vote(c):
                 padding:12px 16px;
                 margin:0.7rem 0 1rem;
             ">
-                <span style="color:#c4b5fd; font-weight:700;">
+                <span style="color:#FBBA72; font-weight:700;">
                     Your wager: {wager} point{"s" if wager != 1 else ""}
                 </span>
                 <br>
@@ -568,9 +568,9 @@ def reveal(c):
     )
 
     verdict_color = (
-        "#2dd4bf"
+        "#FBBA72"
         if res["supported"]
-        else "#fb7185"
+        else "#CA5310"
     )
 
     st.markdown(
@@ -598,7 +598,7 @@ def reveal(c):
             ">
                 {verdict}
             </div>
-            <div style="color:#c1c9dd;">
+            <div style="color:#FBBA72;">
                 Here's what the evidence actually tells us.
             </div>
         </div>
